@@ -1,0 +1,99 @@
+Reproducible Research - Peer Assessment 1
+Stephen Esaku
+18th May, 2018
+Loading and reading the data
+Unzip and load the data.
+
+unzip(zipfile = 'activity.zip')
+head(activityData)
+
+str(activityData)
+
+Calculate the total number of steps taken per day.
+
+aggActivityData <- aggregate(steps ~ date, activityData, sum)
+
+Plot the histogram of the total number of steps taken each day
+
+hist(
+     aggActivityData$steps, xlab = "Total steps by day", 
+     ylab = "Frequency [Days]", main = "Number Of Daily Steps"
+)
+
+Calculate the mean and median of the total number of steps taken per day.
+mean(aggActivityData$steps, na.rm = TRUE)
+## [1] 10766.19
+median(aggActivityData$steps, na.rm = TRUE)
+## [1] 10765
+Plotting the Daily Activity Pattern.
+Making a time series plot of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all days (y-axis).
+
+activityData$interval <- as.factor(activityData$interval)
+
+aggIntervalData <- aggregate(steps ~ interval, activityData, mean)
+
+plot(
+     aggIntervalData, type = "l", xlab = "Interval [5 mins]", 
+     ylab = "Average Daily Steps", main = "Average Number of Steps"
+)
+
+And calculating 5 min interval with maximum steps.
+
+aggIntervalData$interval[which.max(aggIntervalData$steps)]
+## [1] 835
+## 288 Levels: 0 5 10 15 20 25 30 35 40 45 50 55 100 105 110 115 120 ... 2355
+Input the missing values.
+Counting the total number of NAs.
+
+sum(is.na(activityData$steps))
+## [1] 2304
+Create a new dataset where NA values are replaced with the mean value for that interval.
+
+newActivityData = merge(activityData, aggIntervalData, by = "interval")
+
+newActivityData$steps.x[is.na(newActivityData$steps.x)] = newActivityData$steps.y[is.na(newActivityData$steps.x)]
+Plot the new data with NAs replaced.
+Calculate the aggregates for the new dataset.
+
+newAggActivityData <- aggregate(steps.x ~ date, newActivityData, sum)
+Plot the new activity data.
+
+hist(
+     newAggActivityData$steps, xlab = "Total steps by day", 
+     ylab = "Frequency [Days]", main = "Number Of Daily Steps"
+)
+Calculating the new data Mean and Median of the total number of steps taken per day.
+mean(newAggActivityData$steps.x)
+## [1] 10766.19
+median(newAggActivityData$steps.x)
+## [1] 10766.19
+Adding a new column value fot weekend or weekday.
+daytype <- function(date) {
+     if (weekdays(as.Date(date)) %in% c("Saturday", "Sunday")) {
+          "weekend"
+     } else {
+          "weekday"
+     }
+}
+
+newActivityData$day <- as.factor(sapply(newActivityData$date, daytype))
+
+str(newActivityData)
+## 'data.frame':    17568 obs. of  5 variables:
+##  $ interval: Factor w/ 288 levels "0","5","10","15",..: 1 1 1 1 1 1 1 1 1 1 ...
+##  $ steps.x : num  1.72 0 0 0 0 ...
+##  $ date    : Factor w/ 61 levels "2012-10-01","2012-10-02",..: 1 54 28 37 55 46 20 47 38 56 ...
+##  $ steps.y : num  1.72 1.72 1.72 1.72 1.72 ...
+##  $ day     : Factor w/ 2 levels "weekday","weekend": 1 1 2 1 2 1 2 1 1 2 ...
+Plot the data comparing the weekdays and weekends
+Calculate the new aggregates.
+
+aggNewIntervalData <- aggregate(steps.x ~ interval + day, newActivityData, mean)
+Plotting the new data to compare weekdays and weekends.
+
+library(lattice)
+## Warning: package 'lattice' was built under R version 3.2.1
+xyplot(
+       steps.x ~ interval | factor(day), data = aggNewIntervalData, 
+       aspect = 1/2, type = "l"
+)

@@ -1,3 +1,6 @@
+Stephen Esaku
+18th May 2018
+
 ## Introduction
 
 It is now possible to collect a large amount of data about personal
